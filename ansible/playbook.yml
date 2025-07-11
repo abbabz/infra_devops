@@ -1,0 +1,142 @@
+- hosts: web
+  become: yes
+  vars:
+    grafana_user: admin
+    grafana_password: admin
+    grafana_host: "http://localhost:3000"
+
+  tasks:
+    - name: Mettre à jour APT
+      apt:
+        update_cache: yes
+
+    - name: Installer nginx
+      apt:
+        name: nginx
+        state: present
+
+    - name: Démarrer nginx
+      service:
+        name: nginx
+        state: started
+        enabled: yes
+
+    - name: Installer Prometheus
+      apt:
+        name: prometheus
+        state: present
+
+    - name: Démarrer Prometheus
+      service:
+        name: prometheus
+        state: started
+        enabled: yes
+
+    - name: Créer utilisateur node_exporter
+      user:
+        name: node_exporter
+        shell: /usr/sbin/nologin
+
+    - name: Télécharger Node Exporter
+      get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v1.8.1/node_exporter-1.8.1.linux-amd64.tar.gz
+        dest: /tmp/node_exporter.tar.gz
+
+    - name: Décompresser Node Exporter
+      unarchive:
+        src: /tmp/node_exporter.tar.gz
+        dest: /opt/
+        remote_src: yes
+
+    - name: Copier le binaire node_exporter
+      copy:
+        remote_src: yes
+        src: /opt/node_exporter-1.8.1.linux-amd64/node_exporter
+        dest: /usr/local/bin/node_exporter
+        mode: '0755'
+
+    - name: Créer le service systemd pour node_exporter
+      copy:
+        dest: /etc/systemd/system/node_exporter.service
+        content: |
+          [Unit]
+          Description=Node Exporter
+          After=network.target
+
+          [Service]
+          User=node_exporter
+          ExecStart=/usr/local/bin/node_exporter
+
+          [Install]
+          WantedBy=default.target
+
+    - name: Démarrer Node Exporter
+      systemd:
+        name: node_exporter
+        enabled: yes
+        state: started
+
+    - name: Ajouter la clé GPG de Grafana
+      apt_key:
+        url: https://packages.grafana.com/gpg.key
+        state: present
+
+    - name: Ajouter le dépôt Grafana
+      apt_repository:
+        repo: 'deb https://packages.grafana.com/oss/deb stable main'
+        state: present
+        filename: grafana
+
+    - name: Installer Grafana
+      apt:
+        name: grafana
+        state: present
+
+    - name: Démarrer Grafana
+      service:
+        name: grafana-server
+        state: started
+        enabled: yes
+
+    - name: Attendre que Grafana soit prêt
+      uri:
+        url: "{{ grafana_host }}/api/health"
+        user: "{{ grafana_user }}"
+        password: "{{ grafana_password }}"
+        method: GET
+        status_code: 200
+        validate_certs: no
+      register: result
+      retries: 10
+      delay: 5
+      until: result.status == 200
+
+    - name: Ajouter la datasource Prometheus à Grafana
+      uri:
+        url: "{{ grafana_host }}/api/datasources"
+        method: POST
+        user: "{{ grafana_user }}"
+        password: "{{ grafana_password }}"
+        force_basic_auth: yes
+        status_code: 200
+        headers:
+          Content-Type: "application/json"
+        body_format: json
+        body:
+          name: Prometheus
+          type: prometheus
+          access: proxy
+          url: http://localhost:9090
+          isDefault: true
+
+    - name: Créer le dashboard CPU/RAM
+      uri:
+        url: "{{ grafana_host }}/api/dashboards/db"
+        method: POST
+        user: "{{ grafana_user }}"
+        password: "{{ grafana_password }}"
+        force_basic_auth: yes
+        headers:
+          Content-Type: "application/json"
+        body_format: json
+        body: "{{ lookup('file', 'dashboard_cpu_ram.json') | from_json }}"

@@ -1,0 +1,40 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": null,
+    "title": "CPU & RAM Usage",
+    "timezone": "browser",
+    "schemaVersion": 22,
+    "version": 1,
+    "refresh": "5s",
+    "panels": [
+      {
+        "type": "graph",
+        "title": "CPU Usage (%)",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "100 - (avg by (instance)(rate(node_cpu_seconds_total{mode=\"idle\"}[2m])) * 100)",
+            "legendFormat": "{{instance}}",
+            "refId": "A"
+          }
+        ],
+        "gridPos": { "x": 0, "y": 0, "w": 24, "h": 8 }
+      },
+      {
+        "type": "graph",
+        "title": "Memory Usage (%)",
+        "datasource": "Prometheus",
+        "targets": [
+          {
+            "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+            "legendFormat": "{{instance}}",
+            "refId": "B"
+          }
+        ],
+        "gridPos": { "x": 0, "y": 9, "w": 24, "h": 8 }
+      }
+    ]
+  },
+  "overwrite": true
+}
