@@ -4,7 +4,7 @@ provider "aws" {
 
 resource "aws_key_pair" "deployer" {
   key_name   = var.key_name
-  public_key = file("C:/Users/HP ENVY X360/.ssh/id_rsa.pub")  # Chemin absolu Windows
+  public_key = file(var.public_key_path)
 }
 
 resource "aws_instance" "web" {
@@ -19,4 +19,8 @@ resource "aws_instance" "web" {
   provisioner "local-exec" {
     command = "echo [web] > ../ansible/inventory/hosts.ini && echo ${self.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa >> ../ansible/inventory/hosts.ini"
   }
+}
+
+output "instance_ip" {
+  value = aws_instance.web.public_ip
 }
