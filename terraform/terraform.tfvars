@@ -2,4 +2,4 @@ public_key = <<EOF
 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDbC6skq4dDRpjlbDeKdeNooFpP/5q2MyeRKfU6HBLdirbUvEtMavd1tOONLEyUVZgTqHzJZZk57my4aEPQ00tZ7tg89PaIUklNb8BnWMpAOJFhgZbj/6ayWO1Wxj764zDuD5xszD+Ms0VfVSYYHreOt9ruaUVo8VHCuSBIEJpIYFG3Rzfd0V4v3zYXvb/ES3BqH+yqQwFficN2b5TqcHTAnQTl+3X/ovidAznoGxL3urJMbBwKtGM6BgG9o/f7Pa8kGDq7mH1/qvDCHGPggBcV5A1LB/DLGpXkiWE1jzkuvKFT8ds0NB7sUzEhDdgaw7szMkYiVhtVnN9G8qNVn0dgWAnYFmmaNt2ZP2DrE6a7v+es43JotFA5xLlMAyuk7UCIP7sh0eaV4lIGTgCNtvf0XzJOn7CjGHx8TmjVKBHB1IkZ4PqzEiwOT+ABh4Q1bonqPYx8vWUGlDAKevZSu7qzlrqofPG+5dvmCqvYadgwICL8K04d/koza4lfImcxLbO1wZ7Wq6/YbGjgMD0pgbAtIfHbNI3bHm0lTtwt2i/765/+Q3sDQdLRBBnQmXzlFUOXYHDQsJtgDC6zKihbmn8Uli0ir9bBAA8dAyUF37WpIE7HP8eal5M1O6puz2WzfoVXpECZGeLWA5mxWgwsYpd8jGqVpl+OKLFQIBf53rQdZQ== hp envy x360@abba
 EOF
 
-key_name   = "my-key"  # ou un autre nom si tu veux
+key_name   = "my-key-unique-123"  # ou un autre nom si tu veux
