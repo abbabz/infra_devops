@@ -2,10 +2,9 @@ provider "aws" {
   region = "us-east-1"
 }
 
-
 resource "aws_key_pair" "deployer" {
   key_name   = var.key_name
-  public_key = file("~/.ssh/id_rsa.pub")
+  public_key = file("C:/Users/HP ENVY X360/.ssh/id_rsa.pub")  # Chemin absolu Windows
 }
 
 resource "aws_instance" "web" {
