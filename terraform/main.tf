@@ -2,9 +2,6 @@ provider "aws" {
   region = "us-east-1"
 }
 
-variable "key_name" {
-  default = "my-key"
-}
 
 resource "aws_key_pair" "deployer" {
   key_name   = var.key_name
