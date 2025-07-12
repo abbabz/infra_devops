@@ -18,9 +18,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Write SSH public key to file
-        run: echo "${{ secrets.SSH_PUBLIC_KEY }}" > ./terraform/id_rsa.pub
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v2
         with:
@@ -33,7 +30,7 @@ jobs:
       - name: Terraform Apply
         working-directory: terraform
         env:
-          TF_VAR_public_key_path: "./terraform/id_rsa.pub"
+          TF_VAR_public_key: "${{ secrets.SSH_PUBLIC_KEY }}"  # clé publique passée en variable
         run: terraform apply -auto-approve
 
       - name: Get instance IP
