@@ -10,9 +10,8 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Setup Terraform
@@ -29,9 +28,8 @@ jobs:
       - name: Get EC2 public IP from Terraform output
         id: tf_output
         run: |
-          echo "Récupération de l'adresse IP..."
-          IP=$(terraform -chdir=terraform output -raw instance_ip 2>/dev/null)
-          echo "instance_ip=${IP}" >> $GITHUB_ENV
+          IP=$(terraform -chdir=terraform output -raw instance_ip 2>/dev/null | tr -d '\r\n')
+          echo "instance_ip=$IP" >> $GITHUB_ENV
 
       - name: Create Ansible inventory file
         run: |
