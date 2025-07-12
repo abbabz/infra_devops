@@ -1,8 +1,10 @@
 variable "key_name" {
-  default = "my-key"
+  description = "Nom de la clé SSH"
+  type        = string
+  default     = "my-key"
 }
 
 variable "public_key" {
-  description = "Chemin vers le fichier de clé publique SSH"
+  description = "Clé publique SSH en contenu string"
   type        = string
 }
