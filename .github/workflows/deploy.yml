@@ -26,10 +26,10 @@ jobs:
         run: terraform apply -auto-approve
         working-directory: terraform
 
-      - name: Get EC2 Public IP from Terraform output
+      - name: Get EC2 public IP from Terraform output
         id: tf_output
         run: |
-          echo "instance_ip=$(terraform -chdir=terraform output -raw instance_public_ip)" >> $GITHUB_ENV
+            echo "instance_ip=$(terraform -chdir=terraform output -raw instance_ip)" >> $GITHUB_ENV
 
       - name: Install Ansible
         run: |
