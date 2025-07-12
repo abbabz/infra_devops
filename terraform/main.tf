@@ -80,11 +80,6 @@ variable "key_name" {
   default     = "my-key"
 }
 
-variable "public_key" {
-  description = "Clé publique SSH"
-  type        = string
-}
-
 # Import de la clé SSH
 resource "aws_key_pair" "deployer" {
   key_name   = var.key_name
