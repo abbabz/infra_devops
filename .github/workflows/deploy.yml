@@ -29,18 +29,18 @@ jobs:
       - name: Get EC2 public IP from Terraform output
         id: tf_output
         run: |
-            echo "instance_ip=$(terraform -chdir=terraform output -raw instance_ip)" >> $GITHUB_ENV
-
-      - name: Install Ansible
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ansible
+          echo "Récupération de l'adresse IP..."
+          IP=$(terraform -chdir=terraform output -raw instance_ip 2>/dev/null)
+          echo "instance_ip=${IP}" >> $GITHUB_ENV
 
       - name: Create Ansible inventory file
         run: |
           mkdir -p ansible/inventory
           echo "[ubuntu]" > ansible/inventory/hosts.ini
-          echo "$instance_ip ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3" >> ansible/inventory/hosts.ini
+          echo "${{ env.instance_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3" >> ansible/inventory/hosts.ini
+
+      - name: Install Ansible
+        run: sudo apt-get update && sudo apt-get install -y ansible
 
       - name: Run Ansible Playbook for Prometheus
         run: ansible-playbook ansible/playbooks/prometheus_node_exporter.yml -i ansible/inventory/hosts.ini
