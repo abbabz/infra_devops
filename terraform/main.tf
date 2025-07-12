@@ -98,8 +98,9 @@ resource "aws_instance" "web" {
     Name = "AnsibleWeb"
   }
 
-  provisioner "local-exec" {
+    provisioner "local-exec" {
     command = <<EOT
+      mkdir -p ../ansible/inventory
       echo "[web]" > ../ansible/inventory/hosts.ini
       echo "${self.public_ip} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa" >> ../ansible/inventory/hosts.ini
     EOT
