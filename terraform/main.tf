@@ -87,7 +87,7 @@ resource "aws_security_group" "allow_ssh" {
 ###########################
 
 resource "aws_instance" "web" {
-  ami                         = "ami-0c94855ba95c71c99" # Ubuntu 20.04
+  ami                         = "ami-020cba7c55df1f615" # Ubuntu 20.04
   instance_type               = "t2.micro"
   subnet_id                   = aws_subnet.main.id
   vpc_security_group_ids      = [aws_security_group.allow_ssh.id]
