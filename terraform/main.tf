@@ -73,12 +73,6 @@ resource "aws_security_group" "allow_ssh" {
   }
 }
 
-# Déclaration des variables (à placer dans variables.tf)
-variable "key_name" {
-  description = "Nom de la clé SSH"
-  type        = string
-  default     = "my-key"
-}
 
 # Import de la clé SSH
 resource "aws_key_pair" "deployer" {
