@@ -1,11 +1,11 @@
-# variables.tf
 
 variable "key_name" {
-  description = "Nom de la clé SSH utilisée pour la connexion EC2"
+  description = "Nom de la clé SSH"
   type        = string
+  default     = "my-key"
 }
 
 variable "public_key" {
-  description = "Contenu de la clé publique SSH"
+  description = "Clé publique SSH"
   type        = string
 }
