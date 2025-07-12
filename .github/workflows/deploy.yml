@@ -13,15 +13,16 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       TF_VAR_key_name: "my-key"
+      TF_VAR_public_key: "${{ secrets.SSH_PUBLIC_KEY }}"
 
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Terraform
+      - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
         with:
-          terraform_version: 1.6.2
+          terraform_version: 1.6.6  # ou autre version compatible
 
       - name: Terraform Init
         working-directory: terraform
@@ -29,29 +30,22 @@ jobs:
 
       - name: Terraform Apply
         working-directory: terraform
-        env:
-          TF_VAR_public_key: "${{ secrets.SSH_PUBLIC_KEY }}"  # clé publique passée en variable
-        run: terraform apply -auto-approve
+        run: terraform apply -auto-approve -input=false -lock=false
 
-      - name: Get instance IP
+      - name: Get instance IP and export as output
         id: instance_ip
         working-directory: terraform
-        run: echo "instance_ip=$(terraform output -raw instance_ip)" >> $GITHUB_OUTPUT
-
-      - name: Restore SSH private key
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          ip=$(terraform output -raw instance_ip)
+          echo "instance_ip=$ip" >> $GITHUB_OUTPUT
 
-      - name: Install Ansible
+      - name: Afficher l'adresse IP
+        run: echo "Adresse IP de l'instance EC2 : ${{ steps.instance_ip.outputs.instance_ip }}"
+
+      - name: Installer Ansible
         run: sudo apt update && sudo apt install -y ansible
 
-      - name: Create Ansible inventory
+      - name: Exécuter le playbook Ansible
+        working-directory: ansible
         run: |
-          mkdir -p ansible/inventory
-          echo "[web]" > ansible/inventory/hosts.ini
-          echo "${{ steps.instance_ip.outputs.instance_ip }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa" >> ansible/inventory/hosts.ini
-
-      - name: Run Ansible Playbook
-        run: ansible-playbook ansible/playbook.yml -i ansible/inventory/hosts.ini
+          ansible-playbook -i inventory/hosts.ini playbook.yml
