@@ -31,14 +31,23 @@ jobs:
         id: get_ip
         run: |
           IP=$(terraform -chdir=terraform output -raw instance_ip | tr -d '\r\n')
-          echo "INSTANCE_IP=$IP" >> $GITHUB_ENV
-          echo "::set-output name=ip::$IP"
+          echo "ip=$IP" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if IP is empty
+        run: |
+          if [ -z "${{ steps.get_ip.outputs.ip }}" ]; then
+            echo "❌ EC2 IP is empty!"
+            exit 1
+          fi
 
       - name: Create Ansible inventory
         run: |
           mkdir -p ansible/inventory
           echo "[web]" > ansible/inventory/hosts.ini
           echo "${{ steps.get_ip.outputs.ip }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3" >> ansible/inventory/hosts.ini
+
+      - name: Debug inventory
+        run: cat ansible/inventory/hosts.ini
 
       - name: Install Ansible
         run: sudo apt-get update && sudo apt-get install -y ansible
