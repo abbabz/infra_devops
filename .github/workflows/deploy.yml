@@ -6,7 +6,6 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -30,36 +29,30 @@ jobs:
         run: terraform apply -auto-approve -input=false
         working-directory: terraform
 
-      - name: Get EC2 public IP
+      - name: Get EC2 public IP (cleaned)
         id: get_ip
         run: |
-          IP=$(terraform -chdir=terraform output -raw instance_ip | tr -d '\r\n' | xargs)
-          echo "INSTANCE_IP=$IP" >> $GITHUB_ENV
-          echo "Got IP: $IP"
+          IP=$(terraform -chdir=terraform output -raw instance_ip)
+          CLEAN_IP=$(echo "$IP" | tr -d '\r\n' | xargs)
+          echo "INSTANCE_IP=$CLEAN_IP" >> $GITHUB_ENV
+          echo "Cleaned IP: $CLEAN_IP"
 
-      - name: Setup SSH key
+      - name: Setup SSH key and known_hosts
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ env.INSTANCE_IP }} >> ~/.ssh/known_hosts
+          mkdir -p ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ssh/id_rsa
+          chmod 600 ssh/id_rsa
+          ssh-keyscan -H ${{ env.INSTANCE_IP }} > ssh/known_hosts
 
       - name: Create Ansible inventory
         run: |
           mkdir -p ansible/inventory
           echo "[web]" > ansible/inventory/hosts.ini
-          echo "${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3" >> ansible/inventory/hosts.ini
+          echo "${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=$(pwd)/ssh/id_rsa ansible_python_interpreter=/usr/bin/python3 ansible_ssh_common_args='-o UserKnownHostsFile=$(pwd)/ssh/known_hosts -o StrictHostKeyChecking=yes'" >> ansible/inventory/hosts.ini
           cat ansible/inventory/hosts.ini
 
-      - name: Wait for SSH availability
-        run: |
-          for i in {1..30}; do
-            nc -z -w 5 ${{ env.INSTANCE_IP }} 22 && echo "SSH is available" && exit 0
-            echo "Waiting for SSH..."
-            sleep 10
-          done
-          echo "SSH connection timed out"
-          exit 1
+      - name: Test SSH connection
+        run: ssh -i ssh/id_rsa -o UserKnownHostsFile=ssh/known_hosts -o StrictHostKeyChecking=yes ubuntu@${{ env.INSTANCE_IP }} "echo SSH connection OK"
 
       - name: Install Ansible
         run: sudo apt-get update && sudo apt-get install -y ansible
