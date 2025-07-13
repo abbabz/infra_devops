@@ -6,6 +6,7 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -29,36 +30,32 @@ jobs:
         run: terraform apply -auto-approve -input=false
         working-directory: terraform
 
-      - name: Get EC2 public IP (cleaned)
+      - name: Get EC2 public IP
         id: get_ip
         run: |
-          echo "Fetching EC2 IP..."
-          IP=$(terraform -chdir=terraform output -raw instance_ip)
-          CLEAN_IP=$(echo "$IP" | tr -d '\r\n' | xargs)
-          echo "INSTANCE_IP=$CLEAN_IP" >> $GITHUB_ENV
-          echo "Cleaned IP: $CLEAN_IP"
+          IP=$(terraform -chdir=terraform output -raw instance_ip | tr -d '\r\n' | xargs)
+          echo "INSTANCE_IP=$IP" >> $GITHUB_ENV
+          echo "Got IP: $IP"
 
-      - name: Setup SSH config and key
+      - name: Setup SSH key
         run: |
-          mkdir -p $HOME/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
-          chmod 600 $HOME/.ssh/id_rsa
-          ssh-keyscan -H ${{ env.INSTANCE_IP }} >> $HOME/.ssh/known_hosts
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.INSTANCE_IP }} >> ~/.ssh/known_hosts
 
       - name: Create Ansible inventory
         run: |
           mkdir -p ansible/inventory
-          cat > ansible/inventory/hosts.ini <<EOF
-[web]
-${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=$HOME/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3
-EOF
+          echo "[web]" > ansible/inventory/hosts.ini
+          echo "${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3" >> ansible/inventory/hosts.ini
           cat ansible/inventory/hosts.ini
 
       - name: Wait for SSH availability
         run: |
-          echo "Waiting for SSH on ${{ env.INSTANCE_IP }}..."
           for i in {1..30}; do
-            nc -z ${{ env.INSTANCE_IP }} 22 && echo "SSH is up!" && exit 0
+            nc -z -w 5 ${{ env.INSTANCE_IP }} 22 && echo "SSH is available" && exit 0
+            echo "Waiting for SSH..."
             sleep 10
           done
           echo "SSH connection timed out"
