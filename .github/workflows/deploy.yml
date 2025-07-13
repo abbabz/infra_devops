@@ -30,13 +30,16 @@ jobs:
       - name: Get EC2 public IP
         id: get_ip
         run: |
-          echo "ip=$(terraform -chdir=terraform output -raw instance_ip)" >> $GITHUB_OUTPUT
+          echo "Fetching EC2 IP..."
+          IP=$(terraform -chdir=terraform output -raw instance_ip | tr -d '\r')
+          echo "ip=$IP" >> $GITHUB_ENV
+          echo "Instance IP: $IP"
 
       - name: Create Ansible inventory file
         run: |
           mkdir -p ansible/inventory
           echo "[web]" > ansible/inventory/hosts.ini
-          echo "${{ steps.get_ip.outputs.ip }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3" >> ansible/inventory/hosts.ini
+          echo "$ip ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3" >> ansible/inventory/hosts.ini
 
       - name: Show generated hosts.ini (debug)
         run: cat ansible/inventory/hosts.ini
