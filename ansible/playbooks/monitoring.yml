@@ -161,13 +161,121 @@
             <meta charset="UTF-8">
             <title>Monitoring Dashboard</title>
           </head>
-          <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 40px;">
-            <h1 style="color: #2c3e50;">Bienvenue sur le Monitoring Stack</h1>
-            <p style="font-size: 18px;">Ce tableau de bord a été conçu et déployé par <strong>Amadou</strong>, Administrateur Réseaux, Systèmes & DevOps passionné, maîtrisant l'automatisation et la supervision d'infrastructure moderne.</p>
-            <ul style="font-size: 16px;">
-              <li><a href="http://{{ public_ip }}:9090" target="_blank">Prometheus</a></li>
-              <li><a href="http://{{ public_ip }}:3000" target="_blank">Grafana</a></li>
-              <li><a href="http://{{ public_ip }}:9100/metrics" target="_blank">Node Exporter</a></li>
-            </ul>
-          </body>
-          </html>
+          <body style="
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            padding: 40px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+          ">
+            <div style="
+              max-width: 800px;
+              padding: 40px;
+              background: rgba(255, 255, 255, 0.08);
+              backdrop-filter: blur(12px);
+              border-radius: 20px;
+              box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), 
+                          inset 0 0 16px rgba(255, 255, 255, 0.1);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+            ">
+              <h1 style="
+                color: #ffffff;
+                font-size: 2.8rem;
+                margin-bottom: 10px;
+                text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+                letter-spacing: 1px;
+                position: relative;
+                padding-bottom: 20px;
+              ">
+                Bienvenue sur le Monitoring Stack
+                <div style="
+                  position: absolute;
+                  bottom: 0;
+                  left: 50%;
+                  transform: translateX(-50%);
+                  width: 100px;
+                  height: 4px;
+                  background: linear-gradient(to right, #3498db, #2ecc71);
+                  border-radius: 2px;
+                "></div>
+              </h1>
+
+              <p style="
+                font-size: 1.2rem;
+                line-height: 1.7;
+                margin: 30px 0;
+                color: #ecf0f1;
+                text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+              ">
+                Ce tableau de bord a été conçu et déployé par <strong style="
+                  color: #2ecc71;
+                  font-weight: 600;
+                  text-shadow: 0 0 10px rgba(46, 204, 113, 0.4);
+                ">Amadou Issaka ILLO</strong>, Administrateur Réseaux, Systèmes & DevOps passionné, maîtrisant l'automatisation et la supervision d'infrastructure moderne.
+              </p>
+
+              <ul style="
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+                gap: 20px;
+                padding: 0;
+                margin-top: 40px;
+              ">
+                <li style="list-style-type: none;">
+                  <a href="http://{{ public_ip }}:9090" target="_blank" style="
+                    display: inline-block;
+                    padding: 16px 32px;
+                    background: linear-gradient(45deg, #3498db, #2980b9);
+                    color: white;
+                    text-decoration: none;
+                    font-weight: 600;
+                    border-radius: 10px;
+                    box-shadow: 0 6px 15px rgba(41, 128, 185, 0.4);
+                    transition: all 0.3s ease;
+                    transform: translateY(0);
+                    border: 2px solid rgba(255,255,255,0.1);
+                  ">
+                    Prometheus
+                  </a>
+                </li>
+                <li style="list-style-type: none;">
+                  <a href="http://{{ public_ip }}:3000" target="_blank" style="
+                    display: inline-block;
+                    padding: 16px 32px;
+                    background: linear-gradient(45deg, #9b59b6, #8e44ad);
+                    color: white;
+                    text-decoration: none;
+                    font-weight: 600;
+                    border-radius: 10px;
+                    box-shadow: 0 6px 15px rgba(142, 68, 173, 0.4);
+                    transition: all 0.3s ease;
+                    transform: translateY(0);
+                    border: 2px solid rgba(255,255,255,0.1);
+                  ">
+                    Grafana
+                  </a>
+                </li>
+                <li style="list-style-type: none;">
+                  <a href="http://{{ public_ip }}:9100/metrics" target="_blank" style="
+                    display: inline-block;
+                    padding: 16px 32px;
+                    background: linear-gradient(45deg, #2ecc71, #27ae60);
+                    color: white;
+                    text-decoration: none;
+                    font-weight: 600;
+                    border-radius: 10px;
+                    box-shadow: 0 6px 15px rgba(39, 174, 96, 0.4);
+                    transition: all 0.3s ease;
+                    transform: translateY(0);
+                    border: 2px solid rgba(255,255,255,0.1);
+                  ">
+                    Node Exporter
+                  </a>
