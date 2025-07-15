@@ -16,12 +16,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Debug current directory
+      - name: Debug paths & permissions
         run: |
           echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
-          echo "RUNNER_TEMP = $RUNNER_TEMP"
+          echo "RUNNER_TEMP    = $RUNNER_TEMP"
           pwd
           ls -la
+          echo "Can we write to /tmp?"
+          touch /tmp/testfile && echo "✅ /tmp writable"
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -48,20 +50,20 @@ jobs:
       - name: Debug IP
         run: echo "Extracted IP is ${{ env.INSTANCE_IP }}"
 
-      - name: Prepare SSH key in RUNNER_TEMP
+      - name: Prepare SSH key in /tmp
         run: |
-          mkdir -p $RUNNER_TEMP/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $RUNNER_TEMP/.ssh/id_rsa
-          chmod 600 $RUNNER_TEMP/.ssh/id_rsa
-          ssh-keyscan -H ${{ env.INSTANCE_IP }} >> $RUNNER_TEMP/.ssh/known_hosts
-          echo "✔️ SSH key and known_hosts ready"
+          mkdir -p /tmp/ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh/id_rsa
+          chmod 600 /tmp/ssh/id_rsa
+          ssh-keyscan -H ${{ env.INSTANCE_IP }} >> /tmp/ssh/known_hosts
+          echo "✔️ SSH key and known_hosts ready in /tmp/ssh"
 
       - name: Create Ansible inventory
         run: |
           mkdir -p ansible/inventory
           cat <<EOF > ansible/inventory/hosts.ini
           [web]
-          ${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=$RUNNER_TEMP/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3
+          ${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=/tmp/ssh/id_rsa ansible_python_interpreter=/usr/bin/python3
           EOF
           echo "✔️ Inventory generated:"
           cat ansible/inventory/hosts.ini
