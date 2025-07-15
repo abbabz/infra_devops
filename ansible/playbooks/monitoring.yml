@@ -139,6 +139,18 @@
         enabled: yes
         state: started
 
+    - name: Install NGINX
+      apt:
+        name: nginx
+        state: present
+        update_cache: yes
+
+    - name: Ensure /var/www/html exists
+      file:
+        path: /var/www/html
+        state: directory
+        mode: '0755'
+
     - name: Create landing page
       copy:
         dest: /var/www/html/index.html
