@@ -138,3 +138,24 @@
         name: node_exporter
         enabled: yes
         state: started
+
+    - name: Create landing page
+      copy:
+        dest: /var/www/html/index.html
+        content: |
+          <!DOCTYPE html>
+          <html lang="fr">
+          <head>
+            <meta charset="UTF-8">
+            <title>Monitoring Dashboard</title>
+          </head>
+          <body style="font-family: Arial, sans-serif; background-color: #f4f4f4; padding: 40px;">
+            <h1 style="color: #2c3e50;">Bienvenue sur le Monitoring Stack</h1>
+            <p style="font-size: 18px;">Ce tableau de bord a été conçu et déployé par <strong>Amadou</strong>, Administrateur Réseaux, Systèmes & DevOps passionné, maîtrisant l'automatisation et la supervision d'infrastructure moderne.</p>
+            <ul style="font-size: 16px;">
+              <li><a href="http://{{ public_ip }}:9090" target="_blank">Prometheus</a></li>
+              <li><a href="http://{{ public_ip }}:3000" target="_blank">Grafana</a></li>
+              <li><a href="http://{{ public_ip }}:9100/metrics" target="_blank">Node Exporter</a></li>
+            </ul>
+          </body>
+          </html>
