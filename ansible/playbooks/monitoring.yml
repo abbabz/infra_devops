@@ -47,7 +47,9 @@
     - name: Restart Prometheus to apply config
       docker_container:
         name: prometheus
-        state: restarted
+        state: started
+        recreate: yes
+
 
     - name: Run Grafana
       docker_container:
