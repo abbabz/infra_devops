@@ -29,44 +29,33 @@ jobs:
         run: terraform apply -auto-approve -input=false
         working-directory: terraform
 
-      - name: Get EC2 public IP (cleaned)
+      - name: Extract EC2 Public IP
         id: get_ip
         run: |
-          IP=$(terraform -chdir=terraform output -raw instance_ip)
-          CLEAN_IP=$(echo "$IP" | tr -d '\r\n' | xargs)
-          echo "INSTANCE_IP=$CLEAN_IP" >> $GITHUB_ENV
-          echo "IP=$CLEAN_IP" >> $GITHUB_OUTPUT
-          echo "Cleaned IP: $CLEAN_IP"
+          cd terraform
+          IP=$(terraform output -raw instance_ip | tr -d '\r\n ')
+          echo "INSTANCE_IP=$IP" >> $GITHUB_ENV
+          echo "instance_ip=$IP" >> $GITHUB_OUTPUT
+          echo "✔️ Public IP extracted: $IP"
 
-      - name: Debug current directory and files
-        run: |
-          echo "Current directory:"
-          pwd
-          echo "Listing files:"
-          ls -la
+      - name: Debug IP
+        run: echo "Extracted IP is ${{ env.INSTANCE_IP }}"
 
-      - name: Check if ssh file exists and remove if needed
+      - name: Prepare SSH key
         run: |
-          if [ -f "$GITHUB_WORKSPACE/ssh" ]; then
-            echo "File named 'ssh' exists. Removing it."
-            rm -f "$GITHUB_WORKSPACE/ssh"
-          fi
-
-      - name: Setup SSH key and known_hosts
-        run: |
-          mkdir -p $GITHUB_WORKSPACE/ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $GITHUB_WORKSPACE/ssh/id_rsa
-          chmod 600 $GITHUB_WORKSPACE/ssh/id_rsa
-          ssh-keyscan -H ${{ env.INSTANCE_IP }} > $GITHUB_WORKSPACE/ssh/known_hosts
+          mkdir -p $HOME/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > $HOME/.ssh/id_rsa
+          chmod 600 $HOME/.ssh/id_rsa
+          ssh-keyscan -H ${{ env.INSTANCE_IP }} >> $HOME/.ssh/known_hosts
 
       - name: Create Ansible inventory
         run: |
           mkdir -p ansible/inventory
           cat <<EOF > ansible/inventory/hosts.ini
           [web]
-          ${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=$GITHUB_WORKSPACE/ssh/id_rsa ansible_python_interpreter=/usr/bin/python3
+          ${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=$HOME/.ssh/id_rsa ansible_python_interpreter=/usr/bin/python3
           EOF
-          echo "Inventory content:"
+          echo "✔️ Inventory generated:"
           cat ansible/inventory/hosts.ini
 
       - name: Install Ansible
