@@ -10,20 +10,11 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-      TF_VAR_key_name: "ansible-key"
+      TF_VAR_key_name: "my-key"
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
-
-      - name: Debug paths & permissions
-        run: |
-          echo "GITHUB_WORKSPACE = $GITHUB_WORKSPACE"
-          echo "RUNNER_TEMP    = $RUNNER_TEMP"
-          pwd
-          ls -la
-          echo "Can we write to /tmp?"
-          touch /tmp/testfile && echo "✅ /tmp writable"
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v2
@@ -47,23 +38,20 @@ jobs:
           echo "instance_ip=$IP" >> $GITHUB_OUTPUT
           echo "✔️ Public IP extracted: $IP"
 
-      - name: Debug IP
-        run: echo "Extracted IP is ${{ env.INSTANCE_IP }}"
+      - name: Set up SSH agent
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
 
-      - name: Prepare SSH key in /tmp
-        run: |
-          mkdir -p /tmp/ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > /tmp/ssh/id_rsa
-          chmod 600 /tmp/ssh/id_rsa
-          ssh-keyscan -H ${{ env.INSTANCE_IP }} >> /tmp/ssh/known_hosts
-          echo "✔️ SSH key and known_hosts ready in /tmp/ssh"
+      - name: Add EC2 to known_hosts
+        run: ssh-keyscan -H ${{ env.INSTANCE_IP }} >> ~/.ssh/known_hosts
 
       - name: Create Ansible inventory
         run: |
           mkdir -p ansible/inventory
           cat <<EOF > ansible/inventory/hosts.ini
           [web]
-          ${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_private_key_file=/tmp/ssh/id_rsa ansible_python_interpreter=/usr/bin/python3
+          ${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_connection=ssh ansible_ssh_private_key_file=${SSH_AUTH_SOCK:+agent} ansible_python_interpreter=/usr/bin/python3
           EOF
           echo "✔️ Inventory generated:"
           cat ansible/inventory/hosts.ini
