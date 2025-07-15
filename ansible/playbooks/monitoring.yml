@@ -1,4 +1,5 @@
-- hosts: web
+- name: Deploy Monitoring Stack (Prometheus + Grafana + Node Exporter)
+  hosts: web
   become: yes
   vars:
     grafana_admin_user: admin
@@ -18,17 +19,10 @@
         state: started
         enabled: true
 
-    - name: Run Prometheus
-      docker_container:
-        name: prometheus
-        image: prom/prometheus
-        state: started
-        restart_policy: always
-        ports:
-          - "9090:9090"
-        volumes:
-          - /opt/prometheus:/etc/prometheus
-      tags: prometheus
+    - name: Create Prometheus config folder
+      file:
+        path: /opt/prometheus
+        state: directory
 
     - name: Create Prometheus config
       copy:
@@ -44,14 +38,19 @@
               static_configs:
                 - targets: ['{{ public_ip }}:9100']
 
-    - name: Restart Prometheus to apply config
+    - name: Run Prometheus container
       docker_container:
         name: prometheus
+        image: prom/prometheus
         state: started
-        recreate: yes
+        restart_policy: always
+        ports:
+          - "9090:9090"
+        volumes:
+          - /opt/prometheus:/etc/prometheus
+        recreate: true
 
-
-    - name: Run Grafana
+    - name: Run Grafana container
       docker_container:
         name: grafana
         image: grafana/grafana
@@ -62,7 +61,6 @@
         env:
           GF_SECURITY_ADMIN_USER: "{{ grafana_admin_user }}"
           GF_SECURITY_ADMIN_PASSWORD: "{{ grafana_admin_password }}"
-      tags: grafana
 
     - name: Wait for Grafana to be ready
       uri:
@@ -91,9 +89,9 @@
           isDefault: true
         status_code: 200,409
 
-    - name: Import Grafana dashboard
+    - name: Import Node Exporter Full Dashboard (UID 1860)
       uri:
-        url: "http://localhost:3000/api/dashboards/db"
+        url: "http://localhost:3000/api/dashboards/import"
         method: POST
         user: "{{ grafana_admin_user }}"
         password: "{{ grafana_admin_password }}"
@@ -103,17 +101,17 @@
         body_format: json
         body:
           dashboard:
-            id: null
+            id: 1860
             uid: "node-exporter-full"
             title: "Node Exporter Full"
-            tags: [ "linux" ]
-            timezone: "browser"
-            schemaVersion: 16
-            version: 1
-            refresh: "5s"
-            panels: []
           overwrite: true
-      ignore_errors: yes  # Si le dashboard est déjà présent
+          inputs:
+            - name: "DS_PROMETHEUS"
+              type: "datasource"
+              pluginId: "prometheus"
+              value: "Prometheus"
+        status_code: 200
+      ignore_errors: yes
 
     - name: Install Node Exporter
       shell: |
@@ -126,15 +124,17 @@
         [Unit]
         Description=Node Exporter
         After=network.target
+
         [Service]
         User=node_exporter
         ExecStart=/usr/local/bin/node_exporter
+
         [Install]
         WantedBy=default.target
         EOF
 
-    - name: Start Node Exporter service
+    - name: Start Node Exporter
       systemd:
         name: node_exporter
-        enabled: true
+        enabled: yes
         state: started
