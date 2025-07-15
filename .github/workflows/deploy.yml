@@ -10,7 +10,7 @@ jobs:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       TF_VAR_public_key: ${{ secrets.SSH_PUBLIC_KEY }}
-      TF_VAR_key_name: "my-key"
+      TF_VAR_key_name: "ansible-key"
 
     steps:
       - name: Checkout code
@@ -38,6 +38,17 @@ jobs:
           echo "instance_ip=$IP" >> $GITHUB_OUTPUT
           echo "✔️ Public IP extracted: $IP"
 
+      - name: Wait for SSH port (max 2 minutes)
+        run: |
+          echo "⏳ Waiting for SSH port (22) on ${{ env.INSTANCE_IP }}..."
+          for i in {1..12}; do
+            nc -z ${{ env.INSTANCE_IP }} 22 && echo "✅ SSH is ready" && exit 0
+            echo "❌ Not ready yet. Retrying in 10s..."
+            sleep 10
+          done
+          echo "❌ Timeout: SSH not reachable"
+          exit 1
+
       - name: Set up SSH agent
         uses: webfactory/ssh-agent@v0.7.0
         with:
@@ -53,7 +64,7 @@ jobs:
           [web]
           ${{ env.INSTANCE_IP }} ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no' ansible_connection=ssh ansible_ssh_private_key_file=${SSH_AUTH_SOCK:+agent} ansible_python_interpreter=/usr/bin/python3
           EOF
-          echo "✔️ Inventory generated:"
+          echo "✔️ Inventory created:"
           cat ansible/inventory/hosts.ini
 
       - name: Install Ansible
