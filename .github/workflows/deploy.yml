@@ -70,8 +70,5 @@ jobs:
       - name: Install Ansible
         run: sudo apt-get update && sudo apt-get install -y ansible
 
-      - name: Run Prometheus playbook
-        run: ansible-playbook ansible/playbooks/prometheus_node_exporter.yml -i ansible/inventory/hosts.ini
-
-      - name: Run Grafana playbook
-        run: ansible-playbook ansible/playbooks/grafana_prometheus.yml -i ansible/inventory/hosts.ini
+      - name: Deploy full monitoring stack
+        run: ansible-playbook ansible/playbooks/monitoring.yml -i ansible/inventory/hosts.ini
